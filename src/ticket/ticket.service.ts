@@ -20,21 +20,21 @@ export class TicketService {
     try {
 
       const last = await this.ticketRepository
-      .createQueryBuilder('t')
-      .select('t.correlativo', 'correlativo')
-      .orderBy('t.idTicket', 'DESC')
-      .limit(1)
-      .getRawOne<{ correlativo: string | null }>();
+        .createQueryBuilder('t')
+        .select('t.correlativo', 'correlativo')
+        .orderBy('t.idTicket', 'DESC')
+        .limit(1)
+        .getRawOne<{ correlativo: string | null }>();
 
-       let nextNumber = 1;
-    if (last?.correlativo) {
-     
-      const numericPart = parseInt(last.correlativo.replace(/\D/g, ''), 10);
-      if (!isNaN(numericPart)) {
-        nextNumber = numericPart + 1;
+      let nextNumber = 1;
+      if (last?.correlativo) {
+
+        const numericPart = parseInt(last.correlativo.replace(/\D/g, ''), 10);
+        if (!isNaN(numericPart)) {
+          nextNumber = numericPart + 1;
+        }
       }
-    }
-    const correlativo = `INC${nextNumber.toString().padStart(3, '0')}`;
+      const correlativo = `INC${nextNumber.toString().padStart(3, '0')}`;
 
       const ticket = new Ticket()
       ticket.titulo = createTicketDto.titulo;
@@ -97,8 +97,8 @@ export class TicketService {
 
   async findOne(id: number) {
     try {
-       const ticketData = await this.ticketRepository.findOne({
-        where:{idTicket:id}
+      const ticketData = await this.ticketRepository.findOne({
+        where: { idTicket: id }
       })
 
       const asignadoA = await this.usersRepository.findOne({
@@ -115,7 +115,7 @@ export class TicketService {
         select: ['IdUser', 'Name', 'Rol', 'Active']
       });
 
-       return {
+      return {
         code: '000',
         message: 'ok',
         data: {
@@ -131,31 +131,44 @@ export class TicketService {
   }
 
   async update(id: any, updateTicketDto: UpdateTicketDto): Promise<IResponse<any>> {
-  try {
+    try {
 
-    const ticket = await this.ticketRepository.findOne({
-      where: { idTicket:id }, 
-    });
+      const ticket = await this.ticketRepository.findOne({
+        where: { idTicket: id },
+      });
 
-    if (!ticket) {
-      throw new NotFoundException('No existe el ticket');
+      if (!ticket) {
+        throw new NotFoundException('No existe el ticket');
+      }
+
+      const estadoAnterior = ticket?.estado;
+      const estadoNuevo = updateTicketDto.estado ?? estadoAnterior;
+
+
+      Object.assign(ticket, updateTicketDto);
+     
+      const ES_CERRADO = (s: string) => (s || '').trim().toUpperCase() === 'CERRADO';
+      if (!ES_CERRADO(estadoAnterior) && ES_CERRADO(estadoNuevo)) {
+        const ahora = new Date();
+        ticket.fechaCierre = ahora;
+
+
+        const diffMs = ahora.getTime() - new Date(ticket.fechaCreacion).getTime();
+        ticket.duracionCierreSeg = Math.floor(diffMs / 1000);
+      }
+       const updatedTicket = await this.ticketRepository.save(ticket);
+      return {
+        code: '000',
+        message: 'Se actualizó con éxito!',
+        data: updatedTicket,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error?.message || 'Error interno del servidor');
     }
-    
-    Object.assign(ticket, updateTicketDto);
-    const updatedTicket = await this.ticketRepository.save(ticket);
-
-    return {
-      code: '000',
-      message: 'Se actualizó con éxito!',
-      data: updatedTicket,
-    };
-  } catch (error) {
-    if (error instanceof NotFoundException) {
-      throw error;
-    }
-    throw new InternalServerErrorException(error?.message || 'Error interno del servidor');
   }
-}
 
 
   remove(id: number) {

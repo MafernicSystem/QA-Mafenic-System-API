@@ -24,7 +24,7 @@ export class Ticket {
   @Column({ name: 'titulo', type: 'varchar', length: 200 })
   titulo: string;
 
-  @Column({ name: 'activo'})
+  @Column({ name: 'activo' })
   activo: boolean;
 
   @Column({ name: 'descripcion', type: 'text' })
@@ -38,6 +38,7 @@ export class Ticket {
 
   @Column({ name: 'tipo', type: 'varchar', length: 50 })
   tipo: string;
+
   @Column({ name: 'creado_por_id', type: 'bigint' })
   creadoPorId: string;
 
@@ -61,5 +62,11 @@ export class Ticket {
     default: () => 'NOW()',
   })
   fechaActualizacion: Date;
+
+  @Column({ name: 'fecha_cierre', type: 'timestamptz', nullable: true })
+  fechaCierre: Date | null;
+
+  @Column({ name: 'duracion_cierre_seg', type: 'int', nullable: true })
+  duracionCierreSeg: number | null;
 }
 
