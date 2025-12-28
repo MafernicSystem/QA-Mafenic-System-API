@@ -75,7 +75,10 @@ export class AuthService {
   async findAll():  Promise<IResponse<any>> {
     try {
       const data = await this.usersRepository.find({
-        select: ['IdUser', 'Name', 'Rol', 'Active','CreateDate']
+        select: ['IdUser', 'Name', 'Rol', 'Active','CreateDate','Password'],
+        order: {
+        IdUser: 'DESC',
+      },
       });
       return {
         code: '000',
@@ -94,7 +97,7 @@ export class AuthService {
         where: {
           IdUser: id
         },
-        select: ['IdUser', 'Name', 'Rol', 'Active']
+        select: ['IdUser', 'Name', 'Rol', 'Active','Password']
       });
 
       if(!data){
