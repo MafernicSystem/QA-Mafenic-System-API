@@ -18,9 +18,8 @@ async function bootstrap() {
     })
   )
   app.enableCors(corsOptions);
-  const port = process.env.PORT ?? 3000;
-  await app.listen(port);
-  const prefix = 'api/v1';
-  console.log(`Aplicación corriendo en: http://localhost:${port}/${prefix}`);
+  const port = Number(process.env.PORT) || 3000;
+  await app.listen(port, '0.0.0.0');
+  console.log(`API corriendo en puerto ${port} con prefijo /api/v1`);
 }
 bootstrap();
